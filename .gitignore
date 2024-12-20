@@ -106,3 +106,6 @@ uploads/
 
 # owner
 release/
+
+# mongo
+mongodb.conf
