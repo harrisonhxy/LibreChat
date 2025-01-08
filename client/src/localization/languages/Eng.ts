@@ -3,6 +3,7 @@
 // file deepcode ignore HardcodedNonCryptoSecret: No hardcoded secrets present in this file
 
 export default {
+  com_ui_collapse_chat: 'Collapse Chat',
   com_ui_enter_api_key: 'Enter API Key',
   com_ui_librechat_code_api_title: 'Run AI Code',
   com_ui_librechat_code_api_subtitle: 'Secure. Multi-language. Input/Output Files.',
@@ -525,6 +526,8 @@ export default {
     'WARNING: Misuse of this feature can get you BANNED from using Bing! Click on \'System Message\' for full instructions and the default message if omitted, which is the \'Sydney\' preset that is considered safe.',
   com_endpoint_system_message: 'System Message',
   com_endpoint_message: 'Message',
+  com_endpoint_ai: 'AI',
+  com_endpoint_message_new: 'Message {0} or type "@" to switch AI',
   com_endpoint_message_not_appendable: 'Edit your message or Regenerate.',
   com_endpoint_default_blank: 'default: blank',
   com_endpoint_default_false: 'default: false',
