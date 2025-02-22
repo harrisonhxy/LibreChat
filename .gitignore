@@ -106,6 +106,4 @@ uploads/
 
 # owner
 release/
-
-# mongo
-mongodb.conf
+!/client/src/@types/i18next.d.ts
