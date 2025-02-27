@@ -83,14 +83,14 @@ const createTokenHash = () => {
 const sendVerificationEmail = async (user) => {
   const [verifyToken, hash] = createTokenHash();
 
-  const verificationLink = `${
-    domains.client
-  }/verify?token=${verifyToken}&email=${encodeURIComponent(user.email)}`;
+  const verificationLink = `${domains.client
+    }/verify?token=${verifyToken}&email=${encodeURIComponent(user.email)}`;
+
   await sendEmail({
     email: user.email,
-    subject: 'Verify your email',
+    subject: '邮箱验证',
     payload: {
-      appName: process.env.APP_TITLE || 'LibreChat',
+      appName: process.env.APP_TITLE || 'Harrizone API',
       name: user.name,
       verificationLink: verificationLink,
       year: new Date().getFullYear(),
@@ -275,9 +275,9 @@ const requestPasswordReset = async (req) => {
   if (emailEnabled) {
     await sendEmail({
       email: user.email,
-      subject: 'Password Reset Request',
+      subject: '申请密码重置',
       payload: {
-        appName: process.env.APP_TITLE || 'LibreChat',
+        appName: process.env.APP_TITLE || 'Harrizone API',
         name: user.name,
         link: link,
         year: new Date().getFullYear(),
@@ -328,9 +328,9 @@ const resetPassword = async (userId, token, password) => {
   if (checkEmailConfig()) {
     await sendEmail({
       email: user.email,
-      subject: 'Password Reset Successfully',
+      subject: '密码重置成功',
       payload: {
-        appName: process.env.APP_TITLE || 'LibreChat',
+        appName: process.env.APP_TITLE || 'Harrizone API',
         name: user.name,
         year: new Date().getFullYear(),
       },
@@ -405,15 +405,14 @@ const resendVerificationEmail = async (req) => {
 
     const [verifyToken, hash] = createTokenHash();
 
-    const verificationLink = `${
-      domains.client
-    }/verify?token=${verifyToken}&email=${encodeURIComponent(user.email)}`;
+    const verificationLink = `${domains.client
+      }/verify?token=${verifyToken}&email=${encodeURIComponent(user.email)}`;
 
     await sendEmail({
       email: user.email,
-      subject: 'Verify your email',
+      subject: '邮箱验证',
       payload: {
-        appName: process.env.APP_TITLE || 'LibreChat',
+        appName: process.env.APP_TITLE || 'Harrizone API',
         name: user.name,
         verificationLink: verificationLink,
         year: new Date().getFullYear(),
