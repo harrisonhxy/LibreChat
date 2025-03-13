@@ -90,7 +90,7 @@ const sendVerificationEmail = async (user) => {
     email: user.email,
     subject: '邮箱验证',
     payload: {
-      appName: process.env.APP_TITLE || 'Harrizone API',
+      appName: process.env.APP_TITLE || 'Harrizone Chat',
       name: user.name,
       verificationLink: verificationLink,
       year: new Date().getFullYear(),
@@ -277,7 +277,7 @@ const requestPasswordReset = async (req) => {
       email: user.email,
       subject: '申请密码重置',
       payload: {
-        appName: process.env.APP_TITLE || 'Harrizone API',
+        appName: process.env.APP_TITLE || 'Harrizone Chat',
         name: user.name,
         link: link,
         year: new Date().getFullYear(),
@@ -330,7 +330,7 @@ const resetPassword = async (userId, token, password) => {
       email: user.email,
       subject: '密码重置成功',
       payload: {
-        appName: process.env.APP_TITLE || 'Harrizone API',
+        appName: process.env.APP_TITLE || 'Harrizone Chat',
         name: user.name,
         year: new Date().getFullYear(),
       },
@@ -412,7 +412,7 @@ const resendVerificationEmail = async (req) => {
       email: user.email,
       subject: '邮箱验证',
       payload: {
-        appName: process.env.APP_TITLE || 'Harrizone API',
+        appName: process.env.APP_TITLE || 'Harrizone Chat',
         name: user.name,
         verificationLink: verificationLink,
         year: new Date().getFullYear(),

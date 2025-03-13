@@ -10,7 +10,7 @@ const { logger } = require('~/config');
 const { encryptV2 } = require('~/server/utils/crypto');
 
 const enable2FAController = async (req, res) => {
-  const safeAppTitle = (process.env.APP_TITLE || 'LibreChat').replace(/\s+/g, '');
+  const safeAppTitle = (process.env.APP_TITLE || 'Harrizone Chat').replace(/\s+/g, '');
   try {
     const userId = req.user.id;
     const secret = generateTOTPSecret();
