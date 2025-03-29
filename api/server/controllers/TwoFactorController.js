@@ -9,18 +9,13 @@ const { updateUser, getUserById } = require('~/models');
 const { logger } = require('~/config');
 const { encryptV3 } = require('~/server/utils/crypto');
 
-<<<<<<< HEAD
-const enable2FAController = async (req, res) => {
-  const safeAppTitle = (process.env.APP_TITLE || 'Harrizone Chat').replace(/\s+/g, '');
-=======
-const safeAppTitle = (process.env.APP_TITLE || 'LibreChat').replace(/\s+/g, '');
+const safeAppTitle = (process.env.APP_TITLE || 'Harrizone Chat').replace(/\s+/g, '');
 
 /**
  * Enable 2FA for the user by generating a new TOTP secret and backup codes.
  * The secret is encrypted and stored, and 2FA is marked as disabled until confirmed.
  */
 const enable2FA = async (req, res) => {
->>>>>>> upstream/main
   try {
     const userId = req.user.id;
     const secret = generateTOTPSecret();
