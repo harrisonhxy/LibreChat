@@ -1,11 +1,13 @@
 import React, { memo, useCallback } from 'react';
-import MCPConfigDialog from '~/components/ui/MCP/MCPConfigDialog';
-import MCPServerStatusIcon from '~/components/ui/MCP/MCPServerStatusIcon';
-import MultiSelect from '~/components/ui/MultiSelect';
-import { MCPIcon } from '~/components/svg';
-import { useMCPServerManager } from '~/hooks/MCP/useMCPServerManager';
+import { MultiSelect, MCPIcon } from '@librechat/client';
+import MCPServerStatusIcon from '~/components/MCP/MCPServerStatusIcon';
+import MCPConfigDialog from '~/components/MCP/MCPConfigDialog';
+import { useBadgeRowContext } from '~/Providers';
+import { useMCPServerManager } from '~/hooks';
 
-function MCPSelect() {
+type MCPSelectProps = { conversationId?: string | null };
+
+function MCPSelectContent({ conversationId }: MCPSelectProps) {
   const {
     configuredServers,
     mcpValues,
@@ -14,8 +16,9 @@ function MCPSelect() {
     batchToggleServers,
     getServerStatusIconProps,
     getConfigDialogProps,
+    isInitializing,
     localize,
-  } = useMCPServerManager();
+  } = useMCPServerManager({ conversationId });
 
   const renderSelectedValues = useCallback(
     (values: string[], placeholder?: string) => {
@@ -33,14 +36,20 @@ function MCPSelect() {
   const renderItemContent = useCallback(
     (serverName: string, defaultContent: React.ReactNode) => {
       const statusIconProps = getServerStatusIconProps(serverName);
+      const isServerInitializing = isInitializing(serverName);
 
-      // Common wrapper for the main content (check mark + text)
-      // Ensures Check & Text are adjacent and the group takes available space.
+      /**
+       Common wrapper for the main content (check mark + text).
+       Ensures Check & Text are adjacent and the group takes available space.
+        */
       const mainContentWrapper = (
         <button
           type="button"
-          className="flex flex-grow items-center rounded bg-transparent p-0 text-left transition-colors focus:outline-none"
+          className={`flex flex-grow items-center rounded bg-transparent p-0 text-left transition-colors focus:outline-none ${
+            isServerInitializing ? 'opacity-50' : ''
+          }`}
           tabIndex={0}
+          disabled={isServerInitializing}
         >
           {defaultContent}
         </button>
@@ -59,15 +68,13 @@ function MCPSelect() {
 
       return mainContentWrapper;
     },
-    [getServerStatusIconProps],
+    [getServerStatusIconProps, isInitializing],
   );
 
-  // Don't render if no servers are selected and not pinned
   if ((!mcpValues || mcpValues.length === 0) && !isPinned) {
     return null;
   }
 
-  // Don't render if no MCP servers are configured
   if (!configuredServers || configuredServers.length === 0) {
     return null;
   }
@@ -80,7 +87,6 @@ function MCPSelect() {
         items={configuredServers}
         selectedValues={mcpValues ?? []}
         setSelectedValues={batchToggleServers}
-        defaultSelectedValues={mcpValues ?? []}
         renderSelectedValues={renderSelectedValues}
         renderItemContent={renderItemContent}
         placeholder={placeholderText}
@@ -90,9 +96,17 @@ function MCPSelect() {
         selectItemsClassName="border border-blue-600/50 bg-blue-500/10 hover:bg-blue-700/10"
         selectClassName="group relative inline-flex items-center justify-center md:justify-start gap-1.5 rounded-full border border-border-medium text-sm font-medium transition-all md:w-full size-9 p-2 md:p-3 bg-transparent shadow-sm hover:bg-surface-hover hover:shadow-md active:shadow-inner"
       />
-      {configDialogProps && <MCPConfigDialog {...configDialogProps} />}
+      {configDialogProps && (
+        <MCPConfigDialog {...configDialogProps} conversationId={conversationId} />
+      )}
     </>
   );
+}
+
+function MCPSelect(props: MCPSelectProps) {
+  const { mcpServerNames } = useBadgeRowContext();
+  if ((mcpServerNames?.length ?? 0) === 0) return null;
+  return <MCPSelectContent {...props} />;
 }
 
 export default memo(MCPSelect);

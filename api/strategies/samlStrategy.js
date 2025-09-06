@@ -2,11 +2,13 @@ const fs = require('fs');
 const path = require('path');
 const fetch = require('node-fetch');
 const passport = require('passport');
+const { getBalanceConfig } = require('@librechat/api');
+const { ErrorTypes } = require('librechat-data-provider');
 const { hashToken, logger } = require('@librechat/data-schemas');
 const { Strategy: SamlStrategy } = require('@node-saml/passport-saml');
 const { getStrategyFunctions } = require('~/server/services/Files/strategies');
 const { findUser, createUser, updateUser } = require('~/models');
-const { getBalanceConfig } = require('~/server/services/Config');
+const { getAppConfig } = require('~/server/services/Config');
 const paths = require('~/config/paths');
 
 let crypto;
@@ -203,12 +205,22 @@ async function setupSaml() {
             );
           }
 
+          if (user && user.provider !== 'saml') {
+            logger.info(
+              `[samlStrategy] User ${user.email} already exists with provider ${user.provider}`,
+            );
+            return done(null, false, {
+              message: ErrorTypes.AUTH_FAILED,
+            });
+          }
+
           const fullName = getFullName(profile);
 
           const username = convertToUsername(
             getUserName(profile) || getGivenName(profile) || getEmail(profile),
           );
 
+          const appConfig = await getAppConfig();
           if (!user) {
             user = {
               provider: 'saml',
@@ -218,7 +230,7 @@ async function setupSaml() {
               emailVerified: true,
               name: fullName,
             };
-            const balanceConfig = await getBalanceConfig();
+            const balanceConfig = getBalanceConfig(appConfig);
             user = await createUser(user, balanceConfig, true, true);
           } else {
             user.provider = 'saml';
@@ -238,7 +250,9 @@ async function setupSaml() {
                 fileName = profile.nameID + '.png';
               }
 
-              const { saveBuffer } = getStrategyFunctions(process.env.CDN_PROVIDER);
+              const { saveBuffer } = getStrategyFunctions(
+                appConfig?.fileStrategy ?? process.env.CDN_PROVIDER,
+              );
               const imagePath = await saveBuffer({
                 fileName,
                 userId: user._id.toString(),

@@ -1,6 +1,8 @@
+const { isEnabled } = require('@librechat/api');
 const { logger } = require('@librechat/data-schemas');
+const { ErrorTypes } = require('librechat-data-provider');
 const { createSocialUser, handleExistingUser } = require('./process');
-const { isEnabled } = require('~/server/utils');
+const { getAppConfig } = require('~/server/services/Config');
 const { findUser } = require('~/models');
 
 const socialLogin =
@@ -11,12 +13,21 @@ const socialLogin =
         profile,
       });
 
-      const oldUser = await findUser({ email: email.trim() });
+      const appConfig = await getAppConfig();
+      const existingUser = await findUser({ email: email.trim() });
       const ALLOW_SOCIAL_REGISTRATION = isEnabled(process.env.ALLOW_SOCIAL_REGISTRATION);
 
-      if (oldUser) {
-        await handleExistingUser(oldUser, avatarUrl);
-        return cb(null, oldUser);
+      if (existingUser?.provider === provider) {
+        await handleExistingUser(existingUser, avatarUrl, appConfig);
+        return cb(null, existingUser);
+      } else if (existingUser) {
+        logger.info(
+          `[${provider}Login] User ${email} already exists with provider ${existingUser.provider}`,
+        );
+        const error = new Error(ErrorTypes.AUTH_FAILED);
+        error.code = ErrorTypes.AUTH_FAILED;
+        error.provider = existingUser.provider;
+        return cb(error);
       }
 
       if (ALLOW_SOCIAL_REGISTRATION) {
@@ -29,6 +40,7 @@ const socialLogin =
           username,
           name,
           emailVerified,
+          appConfig,
         });
         return cb(null, newUser);
       }
