@@ -1,15 +1,21 @@
 import React, { useRef, useCallback, useMemo, useEffect } from 'react';
-import { useRecoilValue } from 'recoil';
 import { LayoutGrid } from 'lucide-react';
 import { useDrag, useDrop } from 'react-dnd';
 import { Skeleton } from '@librechat/client';
 import { useNavigate } from 'react-router-dom';
 import { useQueries } from '@tanstack/react-query';
+import { useRecoilValue } from 'recoil';
 import { QueryKeys, dataService } from 'librechat-data-provider';
 import type t from 'librechat-data-provider';
-import { useFavorites, useLocalize, useShowMarketplace, useNewConvo } from '~/hooks';
-import { useAssistantsMapContext, useAgentsMapContext } from '~/Providers';
 import type { AgentQueryResult } from '~/common';
+import {
+  useGetConversation,
+  useShowMarketplace,
+  useFavorites,
+  useLocalize,
+  useNewConvo,
+} from '~/hooks';
+import { useAssistantsMapContext, useAgentsMapContext } from '~/Providers';
 import useSelectMention from '~/hooks/Input/useSelectMention';
 import { useGetEndpointsQuery } from '~/data-provider';
 import FavoriteItem from './FavoriteItem';
@@ -122,20 +128,20 @@ export default function FavoritesList({
   const navigate = useNavigate();
   const localize = useLocalize();
   const search = useRecoilValue(store.search);
+  const getConversation = useGetConversation(0);
   const { favorites, reorderFavorites, isLoading: isFavoritesLoading } = useFavorites();
   const showAgentMarketplace = useShowMarketplace();
 
   const { newConversation } = useNewConvo();
   const assistantsMap = useAssistantsMapContext();
   const agentsMap = useAgentsMapContext();
-  const conversation = useRecoilValue(store.conversationByIndex(0));
   const { data: endpointsConfig = {} as t.TEndpointsConfig } = useGetEndpointsQuery();
 
   const { onSelectEndpoint } = useSelectMention({
     modelSpecs: [],
-    conversation,
     assistantsMap,
     endpointsConfig,
+    getConversation,
     newConversation,
     returnHandlers: true,
   });
@@ -192,7 +198,8 @@ export default function FavoritesList({
         } catch (error) {
           if (error && typeof error === 'object' && 'response' in error) {
             const axiosError = error as { response?: { status?: number } };
-            if (axiosError.response?.status === 404) {
+            const status = axiosError.response?.status;
+            if (status === 404 || status === 403) {
               return { found: false };
             }
           }
@@ -200,9 +207,33 @@ export default function FavoritesList({
         }
       },
       staleTime: 1000 * 60 * 5,
-      enabled: missingAgentIds.length > 0,
     })),
   });
+
+  const staleAgentIdsKey = useMemo(() => {
+    const ids: string[] = [];
+    for (let i = 0; i < missingAgentIds.length; i++) {
+      const query = missingAgentQueries[i];
+      if (query.data && !query.data.found) {
+        ids.push(missingAgentIds[i]);
+      }
+    }
+    return ids.sort().join(',');
+  }, [missingAgentIds, missingAgentQueries]);
+
+  const cleanupAttemptedRef = useRef('');
+
+  useEffect(() => {
+    if (!staleAgentIdsKey || cleanupAttemptedRef.current === staleAgentIdsKey) {
+      return;
+    }
+    const staleSet = new Set(staleAgentIdsKey.split(','));
+    const cleaned = safeFavorites.filter((f) => !f.agentId || !staleSet.has(f.agentId));
+    if (cleaned.length < safeFavorites.length) {
+      cleanupAttemptedRef.current = staleAgentIdsKey;
+      reorderFavorites(cleaned, true);
+    }
+  }, [staleAgentIdsKey, safeFavorites, reorderFavorites]);
 
   const combinedAgentsMap = useMemo(() => {
     if (agentsMap === undefined) {
